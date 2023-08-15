@@ -11,12 +11,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 public class AppListActivity extends AppCompatActivity {
     private PackageManager manager;
@@ -29,13 +34,37 @@ public class AppListActivity extends AppCompatActivity {
         loadApps();
         loadListView();
         addClickListener();
+        EditText editText = (EditText) findViewById(R.id.edit);
+        Button button = (Button) findViewById(R.id.bouton);
+        button.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                String EditTextText = removeAccents(editText.getText().toString().toLowerCase(Locale.FRENCH));
+                for (Item item: apps){
+                    String nameApplication = removeAccents(item.name.toString().toLowerCase(Locale.FRENCH));
+                    if (EditTextText.contentEquals(nameApplication) ){
+                        ImageView singleItemImage = findViewById(R.id.singleItemImage);
+                        singleItemImage.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                Intent i = manager.getLaunchIntentForPackage(item.label.toString());
+                                startActivity(i);
+                            }
+                        });
+                        // Mettez à jour les éléments visuels avec les informations de l'élément
+                        singleItemImage.setImageDrawable(item.icon);
+                        break;
+                    }
+                }
+            }
+        });
     }
     private void loadApps(){
         manager = getPackageManager();
         apps = new ArrayList<>();
         Intent i = new Intent(Intent.ACTION_MAIN, null);
         i.addCategory(Intent.CATEGORY_LAUNCHER);
-
         List<ResolveInfo> availableActivities = manager.queryIntentActivities(i,0);
         for (ResolveInfo ri : availableActivities){
             Item app = new Item();
@@ -73,5 +102,10 @@ public class AppListActivity extends AppCompatActivity {
             startActivity(i);
         }
     });
+    }
+    public static String removeAccents(String input) {
+        String normalized = Normalizer.normalize(input, Normalizer.Form.NFD);
+        Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+        return pattern.matcher(normalized).replaceAll("");
     }
 }
