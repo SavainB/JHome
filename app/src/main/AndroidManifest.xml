@@ -13,6 +13,9 @@
         android:theme="@style/Theme.JHome"
         tools:targetApi="31">
         <activity
+            android:name=".ResearchActivity"
+            android:exported="false" />
+        <activity
             android:name=".AppListActivity"
             android:exported="false" />
         <activity
@@ -21,6 +24,7 @@
             android:stateNotNeeded="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
