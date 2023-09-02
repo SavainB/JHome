@@ -24,9 +24,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //loadApps();
-        //loadListView();
-        //addClickListener();
         FragmentListApps fragment2 = new FragmentListApps();
         Bundle args = new Bundle();
         args.putString("key", "ca marche de ouf");
@@ -35,6 +32,11 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new HomeFragment())
+                    .commit();
+        }
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container_bar, new FragmentSearchBar())
                     .commit();
         }
     }

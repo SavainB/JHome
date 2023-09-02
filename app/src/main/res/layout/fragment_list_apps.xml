@@ -10,23 +10,11 @@
     <ListView
         android:id="@+id/list_item"
         android:layout_width="wrap_content"
-        android:layout_height="566dp"
+        android:layout_height="wrap_content"
         android:background="#ffffff" />
 
-    <ImageView
-        android:id="@+id/singleItemImage"
-        android:layout_width="140dp"
-        android:layout_height="59dp" />
-    <EditText
-        android:id="@+id/edit"
-        android:layout_width="376dp"
-        android:layout_height="wrap_content"
-        android:text="" />
-    <Button
-        android:id="@+id/bouton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Selectionner" />
+
+
 
 
 </LinearLayout>

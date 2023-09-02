@@ -13,12 +13,6 @@
         android:theme="@style/Theme.JHome"
         tools:targetApi="31">
         <activity
-            android:name=".ResearchActivity"
-            android:exported="false" />
-        <activity
-            android:name=".AppListActivity"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:stateNotNeeded="true">

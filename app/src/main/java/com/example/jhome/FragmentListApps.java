@@ -78,42 +78,9 @@ public class FragmentListApps extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_list_apps, container, false);
-
-        Bundle args = getArguments();
-        if (args != null) {
-            String sharedData = args.getString("key");
-            Button button = rootView.findViewById(R.id.bouton);
-            button.setText(sharedData);
-        }
-
         loadApps();
         loadListView(rootView);
         addClickListener();
-        EditText editText = (EditText) rootView.findViewById(R.id.edit);
-        Button button = (Button) rootView.findViewById(R.id.bouton);
-        button.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View view) {
-                String EditTextText = removeAccents(editText.getText().toString().toLowerCase(Locale.FRENCH));
-                for (Item item: apps){
-                    String nameApplication = removeAccents(item.name.toString().toLowerCase(Locale.FRENCH));
-                    if (EditTextText.contentEquals(nameApplication) ){
-                        ImageView singleItemImage = rootView.findViewById(R.id.singleItemImage);
-                        singleItemImage.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                Intent i = manager.getLaunchIntentForPackage(item.label.toString());
-                                startActivity(i);
-                            }
-                        });
-                        // Mettez à jour les éléments visuels avec les informations de l'élément
-                        singleItemImage.setImageDrawable(item.icon);
-                        break;
-                    }
-                }
-            }
-        });
 
         return rootView;
     }
