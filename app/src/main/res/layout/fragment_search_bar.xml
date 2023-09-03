@@ -4,24 +4,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="20dp"
     tools:context=".FragmentSearchBar">
 
     <ListView
         android:id="@+id/suggestionsListView"
         android:layout_width="wrap_content"
-        android:layout_height="150dp"
-        android:background="#ffffff" />
+        android:layout_height="123dp"
+        android:background="#CCCCCC"
+        android:visibility="gone"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#000000" />
     <ListView
+        android:verticalScrollbarPosition="left"
         android:id="@+id/list_items"
         android:layout_width="wrap_content"
-        android:layout_height="150dp"
-        android:background="#ffffff" />
+        android:layout_height="120dp"
+        android:background="#CCCCCC"
+        android:visibility="gone"/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#000000" />*
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <EditText
+            android:id="@+id/edit"
+            android:layout_width="376dp"
+            android:layout_height="wrap_content"
+            android:hint="Tapez pour chercher" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#000000" />
+        <Button
+            android:id="@+id/searchButton"
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:text="search"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"/>
+    </RelativeLayout>
 
-    <EditText
-        android:id="@+id/edit"
-        android:layout_width="376dp"
-        android:layout_height="wrap_content"
-        android:hint="Tapez pour chercher" />
 
 </LinearLayout>

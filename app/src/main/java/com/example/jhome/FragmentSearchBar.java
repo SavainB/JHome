@@ -3,6 +3,7 @@ package com.example.jhome;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -41,6 +42,8 @@ public class FragmentSearchBar extends Fragment {
     private ListView suggestionsListView;
     private List<String> suggestions;
     private ArrayAdapter<String> adapter;
+    private String searchText;
+
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -90,6 +93,7 @@ public class FragmentSearchBar extends Fragment {
         suggestions = new ArrayList<>();
         adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, suggestions);
         suggestionsListView.setAdapter(adapter);
+
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -98,30 +102,40 @@ public class FragmentSearchBar extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                updateSuggestions(charSequence.toString());
-                loadApps(removeAccents(charSequence.toString()));
-                list = (ListView) rootView.findViewById(R.id.list_items);
-                ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(requireContext(), R.layout.item, apps) {
-                    @NonNull
-                    @Override
-                    public View getView(int position, @NonNull View convertView, @NonNull ViewGroup parent) {
-                        String names = removeAccents((String) apps.get(position).name);
-                        System.out.println(names);
-                        if (convertView == null) {
-                            convertView = getLayoutInflater().inflate(R.layout.item, null);
+
+                searchText = charSequence.toString();
+                updateSuggestions(searchText);
+                loadApps(removeAccents(searchText));
+                if(!searchText.isEmpty()) {
+                    list = (ListView) rootView.findViewById(R.id.list_items);
+                    list.setVisibility(View.VISIBLE);
+                    ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(requireContext(), R.layout.item, apps) {
+                        @NonNull
+                        @Override
+                        public View getView(int position, @NonNull View convertView, @NonNull ViewGroup parent) {
+                            String names = removeAccents((String) apps.get(position).name);
+                            System.out.println(names);
+                            if (convertView == null) {
+                                convertView = getLayoutInflater().inflate(R.layout.item, null);
+                            }
+
+                            ImageView appicon = (ImageView) convertView.findViewById(R.id.icon);
+                            appicon.setImageDrawable(apps.get(position).icon);
+                            TextView appName = (TextView) convertView.findViewById(R.id.name);
+                            appName.setText(apps.get(position).name);
+
+
+                            return convertView;
                         }
+                    };
+                    list.setAdapter(adapter);
 
-                        ImageView appicon = (ImageView) convertView.findViewById(R.id.icon);
-                        appicon.setImageDrawable(apps.get(position).icon);
-                        TextView appName = (TextView) convertView.findViewById(R.id.name);
-                        appName.setText(apps.get(position).name);
-
-
-                        return convertView;
-                    }
-                };
-                list.setAdapter(adapter);
-                addClickListener();
+                    addClickListener();
+                }
+                else{
+                    list = (ListView) rootView.findViewById(R.id.list_items);
+                    list.setVisibility(View.GONE);
+                }
             }
 
             @Override
@@ -133,12 +147,40 @@ public class FragmentSearchBar extends Fragment {
         return rootView;
     }
     private void updateSuggestions(String searchText) {
-        // Ici, vous pouvez implémenter la logique pour obtenir des suggestions
-        // en fonction du texte de recherche. Pour cet exemple, nous utilisons des données
-        // statiques.
-        suggestions.clear();
-        suggestions.add("Suggestion naviguateur" + searchText);
-        adapter.notifyDataSetChanged();
+        if (!searchText.isEmpty()){
+            suggestionsListView.setVisibility(View.VISIBLE);
+            // Ici, vous pouvez implémenter la logique pour obtenir des suggestions
+            // en fonction du texte de recherche. Pour cet exemple, nous utilisons des données
+            // statiques.
+            suggestions.clear();
+            suggestions.add("Internet : "+searchText);
+            suggestions.add("Youtube : "+searchText);
+            adapter.notifyDataSetChanged();
+            suggestionsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    if (position == 0) {
+                        intent.setData(Uri.parse("https://www.google.com/search?q=" + Uri.encode(searchText)));
+                    }
+                    else{
+                        intent.setData(Uri.parse("https://www.youtube.com/results?search_query=" + Uri.encode(searchText)));
+                    }
+
+
+                    // Vérifiez si une application de navigateur est disponible pour gérer cette intention
+                    if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
+                        // Lancez l'intention
+                        startActivity(intent);
+                    } else {
+                        // Aucune application de navigateur n'est disponible, vous pouvez gérer cette situation ici
+                    }
+                }
+            });
+        }else {
+            suggestionsListView.setVisibility(View.GONE);
+        }
+
     }
     private void loadApps(String search){        manager = requireContext().getPackageManager();
         apps = new ArrayList<>();
