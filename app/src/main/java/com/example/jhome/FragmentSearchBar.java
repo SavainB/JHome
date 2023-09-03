@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  */
 public class FragmentSearchBar extends Fragment {
     private PackageManager manager;
-    private List<Item> apps;
+    private List<Item> apps,oldApps;
     private ListView list;
 
     private ListView suggestionsListView;
@@ -91,6 +91,7 @@ public class FragmentSearchBar extends Fragment {
         EditText editText = (EditText) rootView.findViewById(R.id.edit);
         suggestionsListView = rootView.findViewById(R.id.suggestionsListView);
         suggestions = new ArrayList<>();
+        oldApps = new ArrayList<>();
         adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, suggestions);
         suggestionsListView.setAdapter(adapter);
 
@@ -102,11 +103,10 @@ public class FragmentSearchBar extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
                 searchText = charSequence.toString();
-                updateSuggestions(searchText);
-                loadApps(removeAccents(searchText));
                 if(!searchText.isEmpty()) {
+                    updateSuggestions(searchText);
+                    loadApps(removeAccents(searchText));
                     list = (ListView) rootView.findViewById(R.id.list_items);
                     list.setVisibility(View.VISIBLE);
                     ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(requireContext(), R.layout.item, apps) {
@@ -133,8 +133,29 @@ public class FragmentSearchBar extends Fragment {
                     addClickListener();
                 }
                 else{
+                    apps = oldApps;
                     list = (ListView) rootView.findViewById(R.id.list_items);
-                    list.setVisibility(View.GONE);
+                    ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(requireContext(), R.layout.item, apps) {
+                        @NonNull
+                        @Override
+                        public View getView(int position, @NonNull View convertView, @NonNull ViewGroup parent) {
+                            String names = removeAccents((String) apps.get(position).name);
+                            System.out.println(names);
+                            if (convertView == null) {
+                                convertView = getLayoutInflater().inflate(R.layout.item, null);
+                            }
+
+                            ImageView appicon = (ImageView) convertView.findViewById(R.id.icon);
+                            appicon.setImageDrawable(apps.get(position).icon);
+                            TextView appName = (TextView) convertView.findViewById(R.id.name);
+                            appName.setText(apps.get(position).name);
+
+
+                            return convertView;
+                        }
+                    };
+                    list.setAdapter(adapter);
+                    addClickListener();
                 }
             }
 
@@ -182,28 +203,35 @@ public class FragmentSearchBar extends Fragment {
         }
 
     }
-    private void loadApps(String search){        manager = requireContext().getPackageManager();
-        apps = new ArrayList<>();
-        Intent i = new Intent(Intent.ACTION_MAIN, null);
-        i.addCategory(Intent.CATEGORY_LAUNCHER);
-        List<ResolveInfo> availableActivities = manager.queryIntentActivities(i,0);
-        for (ResolveInfo ri : availableActivities){
-            Item app = new Item();
-            String name= removeAccents(String.valueOf(ri.loadLabel(manager)));
-            if (name.toLowerCase().contains(search.toLowerCase())) {
-                app.label = ri.activityInfo.packageName;
-                app.name = ri.loadLabel(manager);
-                app.icon = ri.loadIcon(manager);
-                apps.add(app);
+    private void loadApps(String search){
+        if (!search.trim().isEmpty())
+        {
+            manager = requireContext().getPackageManager();
+            apps = new ArrayList<>();
+            Intent i = new Intent(Intent.ACTION_MAIN, null);
+            i.addCategory(Intent.CATEGORY_LAUNCHER);
+            List<ResolveInfo> availableActivities = manager.queryIntentActivities(i, 0);
+            for (ResolveInfo ri : availableActivities) {
+                Item app = new Item();
+                String name = removeAccents(String.valueOf(ri.loadLabel(manager)));
+                if (name.toLowerCase().contains(search.toLowerCase())) {
+                    app.label = ri.activityInfo.packageName;
+                    app.name = ri.loadLabel(manager);
+                    app.icon = ri.loadIcon(manager);
+                    apps.add(app);
+                }
             }
         }
-
     }
 
     private void addClickListener(){
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (oldApps.size()>3){
+                    oldApps = new ArrayList<>();
+                }
+                oldApps.add(apps.get(position));
                 Intent i = manager.getLaunchIntentForPackage(apps.get(position).label.toString());
                 startActivity(i);
             }
