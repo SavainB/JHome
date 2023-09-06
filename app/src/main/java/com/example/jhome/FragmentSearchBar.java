@@ -1,14 +1,22 @@
 package com.example.jhome;
 
+import static androidx.core.content.PermissionChecker.checkSelfPermission;
+
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
@@ -27,8 +35,9 @@ import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import android.Manifest;
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link FragmentSearchBar#newInstance} factory method to
@@ -44,6 +53,8 @@ public class FragmentSearchBar extends Fragment {
     private ArrayAdapter<String> adapter;
     private String searchText;
 
+    ArrayList<String> contactsList = new ArrayList<>();
+    private static final int REQUEST_READ_CONTACTS  = 100;
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -88,13 +99,23 @@ public class FragmentSearchBar extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_search_bar, container, false);
+
+        // Vérifiez si vous avez la permission de lire les contacts
+        if (requireContext().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            // Demandez la permission de lire les contacts
+            requireActivity().requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, REQUEST_READ_CONTACTS);
+        }
+        else {
+            // Si vous avez déjà la permission, lisez les contacts
+            readContacts();
+        }
+
         EditText editText = (EditText) rootView.findViewById(R.id.edit);
         suggestionsListView = rootView.findViewById(R.id.suggestionsListView);
         suggestions = new ArrayList<>();
         oldApps = new ArrayList<>();
         adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, suggestions);
         suggestionsListView.setAdapter(adapter);
-
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -167,15 +188,63 @@ public class FragmentSearchBar extends Fragment {
 
         return rootView;
     }
-    private void updateSuggestions(String searchText) {
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_READ_CONTACTS) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission accordée, lisez les contacts
+                readContacts();
+            } else {
+                // Permission refusée, gérez le cas où vous ne pouvez pas accéder aux contacts.
+                // Vous pouvez afficher un message à l'utilisateur ou prendre d'autres mesures appropriées.
+            }
+        }
+    }
+    private void readContacts() {
+        System.out.println("Au debut "+contactsList);
+        Cursor cursor = requireContext().getContentResolver().query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                @SuppressLint("Range") String contactName = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                @SuppressLint("Range") String contactNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                contactsList.add(contactName + ": " + contactNumber);
+            }
+            cursor.close();
+        }
+
+        System.out.println("A la fin"+contactsList);
+    }
+    private String findContact(String search){
+            System.out.println("dans la fonction");
+            if (!search.trim().isEmpty()) {
+                for (String contact : contactsList) {
+                    System.out.println("1 : " + search.toLowerCase() + " 2 / " + contact.toLowerCase());
+                    if (contact.toLowerCase().contains(search.toLowerCase())) {
+                        return contact;
+                    }
+                }
+            }
+            return "===="; // Cette ligne sera exécutée si aucune correspondance n'est trouvée.
+    }
+
+        private void updateSuggestions(String searchText) {
         if (!searchText.isEmpty()){
             suggestionsListView.setVisibility(View.VISIBLE);
             // Ici, vous pouvez implémenter la logique pour obtenir des suggestions
             // en fonction du texte de recherche. Pour cet exemple, nous utilisons des données
             // statiques.
             suggestions.clear();
-            suggestions.add("Internet : "+searchText);
             suggestions.add("Youtube : "+searchText);
+            suggestions.add("Internet : "+searchText);
+            String test = findContact(searchText);
+            suggestions.add("Contact : "+test);
             adapter.notifyDataSetChanged();
             suggestionsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -183,6 +252,18 @@ public class FragmentSearchBar extends Fragment {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
                     if (position == 0) {
                         intent.setData(Uri.parse("https://www.google.com/search?q=" + Uri.encode(searchText)));
+                    }
+                    else if(position == 2){
+                        String extractedNumbers = suggestions.get(position).replaceAll("[^\\d]", "");
+                        intent.setData(Uri.parse("smsto:" + Uri.encode(extractedNumbers)));
+                        // intent.setData(Uri.parse("sms:")); // Cette ligne spécifie l'URI pour les SMS
+                        // Vérifiez si l'application de messagerie SMS par défaut est disponible sur l'appareil
+                        if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
+                            startActivity(intent);
+                        } else {
+                            // Gérez le cas où aucune application de messagerie SMS n'est disponible sur l'appareil.
+                            // Vous pouvez afficher un message à l'utilisateur ou prendre d'autres mesures appropriées.
+                        }
                     }
                     else{
                         intent.setData(Uri.parse("https://www.youtube.com/results?search_query=" + Uri.encode(searchText)));
