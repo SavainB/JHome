@@ -9,7 +9,7 @@
     <ListView
         android:id="@+id/suggestionsListView"
         android:layout_width="wrap_content"
-        android:layout_height="123dp"
+        android:layout_height="wrap_content"
         android:background="#CCCCCC"
         android:visibility="gone"/>
     <View
@@ -20,7 +20,8 @@
     <ListView
         android:id="@+id/list_items"
         android:layout_width="wrap_content"
-        android:layout_height="189dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:background="#CCCCCC"
         android:verticalScrollbarPosition="left" />
     <View
@@ -32,7 +33,7 @@
         android:layout_height="wrap_content">
         <EditText
             android:id="@+id/edit"
-            android:layout_width="376dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Tapez pour chercher" />
         <View

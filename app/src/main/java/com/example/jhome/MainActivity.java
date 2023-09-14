@@ -24,10 +24,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        FragmentListApps fragment2 = new FragmentListApps();
-        Bundle args = new Bundle();
-        args.putString("key", "ca marche de ouf");
-        fragment2.setArguments(args);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()

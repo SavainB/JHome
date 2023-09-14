@@ -110,12 +110,13 @@ public class FragmentSearchBar extends Fragment {
             readContacts();
         }
 
-        EditText editText = (EditText) rootView.findViewById(R.id.edit);
+
         suggestionsListView = rootView.findViewById(R.id.suggestionsListView);
         suggestions = new ArrayList<>();
         oldApps = new ArrayList<>();
         adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, suggestions);
         suggestionsListView.setAdapter(adapter);
+        EditText editText = (EditText) rootView.findViewById(R.id.edit);
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -134,8 +135,6 @@ public class FragmentSearchBar extends Fragment {
                         @NonNull
                         @Override
                         public View getView(int position, @NonNull View convertView, @NonNull ViewGroup parent) {
-                            String names = removeAccents((String) apps.get(position).name);
-                            System.out.println(names);
                             if (convertView == null) {
                                 convertView = getLayoutInflater().inflate(R.layout.item, null);
                             }
@@ -144,7 +143,6 @@ public class FragmentSearchBar extends Fragment {
                             appicon.setImageDrawable(apps.get(position).icon);
                             TextView appName = (TextView) convertView.findViewById(R.id.name);
                             appName.setText(apps.get(position).name);
-
 
                             return convertView;
                         }
@@ -160,8 +158,6 @@ public class FragmentSearchBar extends Fragment {
                         @NonNull
                         @Override
                         public View getView(int position, @NonNull View convertView, @NonNull ViewGroup parent) {
-                            String names = removeAccents((String) apps.get(position).name);
-                            System.out.println(names);
                             if (convertView == null) {
                                 convertView = getLayoutInflater().inflate(R.layout.item, null);
                             }
@@ -170,7 +166,6 @@ public class FragmentSearchBar extends Fragment {
                             appicon.setImageDrawable(apps.get(position).icon);
                             TextView appName = (TextView) convertView.findViewById(R.id.name);
                             appName.setText(apps.get(position).name);
-
 
                             return convertView;
                         }
@@ -201,7 +196,6 @@ public class FragmentSearchBar extends Fragment {
         }
     }
     private void readContacts() {
-        System.out.println("Au debut "+contactsList);
         Cursor cursor = requireContext().getContentResolver().query(
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                 null,
@@ -218,23 +212,19 @@ public class FragmentSearchBar extends Fragment {
             }
             cursor.close();
         }
-
-        System.out.println("A la fin"+contactsList);
     }
     private String findContact(String search){
-            System.out.println("dans la fonction");
             if (!search.trim().isEmpty()) {
                 for (String contact : contactsList) {
-                    System.out.println("1 : " + search.toLowerCase() + " 2 / " + contact.toLowerCase());
-                    if (contact.toLowerCase().contains(search.toLowerCase())) {
+                    if (removeAccents(contact).toLowerCase().contains(removeAccents(search.toLowerCase()))) {
                         return contact;
                     }
                 }
             }
-            return "===="; // Cette ligne sera exécutée si aucune correspondance n'est trouvée.
+            return ""; // Cette ligne sera exécutée si aucune correspondance n'est trouvée.
     }
 
-        private void updateSuggestions(String searchText) {
+    private void updateSuggestions(String searchText) {
         if (!searchText.isEmpty()){
             suggestionsListView.setVisibility(View.VISIBLE);
             // Ici, vous pouvez implémenter la logique pour obtenir des suggestions
@@ -243,8 +233,10 @@ public class FragmentSearchBar extends Fragment {
             suggestions.clear();
             suggestions.add("Youtube : "+searchText);
             suggestions.add("Internet : "+searchText);
-            String test = findContact(searchText);
-            suggestions.add("Contact : "+test);
+            String findContact = findContact(searchText);
+            if (!findContact.isEmpty()) {
+                suggestions.add("Contact : " + findContact);
+            }
             adapter.notifyDataSetChanged();
             suggestionsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -309,10 +301,19 @@ public class FragmentSearchBar extends Fragment {
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (oldApps.size()>3){
+                if (oldApps.size()>=3){
                     oldApps = new ArrayList<>();
                 }
-                oldApps.add(apps.get(position));
+                boolean isAppInList = false;
+                for (Item iteme : oldApps) {
+                    if (iteme.name.equals(apps.get(position).name)) {
+                        isAppInList = true;
+                        break; // Sortir de la boucle dès que l'élément est trouvé
+                    }
+                }
+                if (!isAppInList) {
+                    oldApps.add(apps.get(position));
+                }
                 Intent i = manager.getLaunchIntentForPackage(apps.get(position).label.toString());
                 startActivity(i);
             }
