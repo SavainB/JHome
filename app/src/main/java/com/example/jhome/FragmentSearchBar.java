@@ -21,6 +21,9 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -29,6 +32,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import java.text.Normalizer;
@@ -117,6 +121,48 @@ public class FragmentSearchBar extends Fragment {
         adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, suggestions);
         suggestionsListView.setAdapter(adapter);
         EditText editText = (EditText) rootView.findViewById(R.id.edit);
+        Button searchButton = (Button) rootView.findViewById(R.id.searchButton);
+        setHasOptionsMenu(true);
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Créez un objet PopupMenu associé au bouton
+                PopupMenu popupMenu = new PopupMenu(getContext(), searchButton);
+                popupMenu.getMenuInflater().inflate(R.menu.menun_search_bar, popupMenu.getMenu());
+                // Définissez un écouteur d'événement pour les éléments du menu
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        String itemId = getResources().getResourceEntryName(menuItem.getItemId());
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        switch (itemId) {
+                            case "menu_item_1":
+                                // Action pour "Youtube"
+                                intent.setData(Uri.parse("https://www.youtube.com/results?search_query=" + Uri.encode(editText.getText().toString())));
+                                break;
+                            case "menu_item_2":
+                                // Action pour "PlayStore"
+                                intent.setData(Uri.parse("https://play.google.com/store/search?q=" + Uri.encode(editText.getText().toString())));
+
+                                break;
+                            case "menu_item_3":
+                                // Action pour "Internet"
+                                intent.setData(Uri.parse("https://www.google.com/search?q=" + Uri.encode(editText.getText().toString())));
+                                break;
+                        }
+                        if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
+                            // Lancez l'intention
+                            startActivity(intent);
+                        }
+                        return true;
+
+                    }
+                });
+                // Affichez le menu contextuel
+                popupMenu.show();
+            }
+        });
+
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -231,8 +277,6 @@ public class FragmentSearchBar extends Fragment {
             // en fonction du texte de recherche. Pour cet exemple, nous utilisons des données
             // statiques.
             suggestions.clear();
-            suggestions.add("Youtube : "+searchText);
-            suggestions.add("Internet : "+searchText);
             String findContact = findContact(searchText);
             if (!findContact.isEmpty()) {
                 suggestions.add("Contact : " + findContact);
@@ -242,10 +286,6 @@ public class FragmentSearchBar extends Fragment {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
-                    if (position == 0) {
-                        intent.setData(Uri.parse("https://www.google.com/search?q=" + Uri.encode(searchText)));
-                    }
-                    else if(position == 2){
                         String extractedNumbers = suggestions.get(position).replaceAll("[^\\d]", "");
                         intent.setData(Uri.parse("smsto:" + Uri.encode(extractedNumbers)));
                         // intent.setData(Uri.parse("sms:")); // Cette ligne spécifie l'URI pour les SMS
@@ -256,12 +296,6 @@ public class FragmentSearchBar extends Fragment {
                             // Gérez le cas où aucune application de messagerie SMS n'est disponible sur l'appareil.
                             // Vous pouvez afficher un message à l'utilisateur ou prendre d'autres mesures appropriées.
                         }
-                    }
-                    else{
-                        intent.setData(Uri.parse("https://www.youtube.com/results?search_query=" + Uri.encode(searchText)));
-                    }
-
-
                     // Vérifiez si une application de navigateur est disponible pour gérer cette intention
                     if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
                         // Lancez l'intention
