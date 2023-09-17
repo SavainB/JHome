@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -19,6 +20,7 @@ import androidx.fragment.app.Fragment;
 import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -42,6 +44,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import android.Manifest;
+import android.widget.Toast;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link FragmentSearchBar#newInstance} factory method to
@@ -56,6 +60,7 @@ public class FragmentSearchBar extends Fragment {
     private List<String> suggestions;
     private ArrayAdapter<String> adapter;
     private String searchText;
+    private int selectedPosition;
 
     ArrayList<String> contactsList = new ArrayList<>();
     private static final int REQUEST_READ_CONTACTS  = 100;
@@ -194,7 +199,7 @@ public class FragmentSearchBar extends Fragment {
                         }
                     };
                     list.setAdapter(adapter);
-
+                    registerForContextMenu(list);
                     addClickListener();
                 }
                 else{
@@ -217,6 +222,7 @@ public class FragmentSearchBar extends Fragment {
                         }
                     };
                     list.setAdapter(adapter);
+                    registerForContextMenu(list);
                     addClickListener();
                 }
             }
@@ -332,22 +338,19 @@ public class FragmentSearchBar extends Fragment {
     }
 
     private void addClickListener(){
+        list.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+            @Override
+            public void onCreateContextMenu(ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
+                AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) contextMenuInfo;
+                selectedPosition = info.position; // Stockez la position de l'élément sélectionné
+                getActivity().getMenuInflater().inflate(R.menu.menu_popup, contextMenu);
+            }
+        });
+
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (oldApps.size()>=3){
-                    oldApps = new ArrayList<>();
-                }
-                boolean isAppInList = false;
-                for (Item iteme : oldApps) {
-                    if (iteme.name.equals(apps.get(position).name)) {
-                        isAppInList = true;
-                        break; // Sortir de la boucle dès que l'élément est trouvé
-                    }
-                }
-                if (!isAppInList) {
-                    oldApps.add(apps.get(position));
-                }
+                addOnOldApp(position);
                 Intent i = manager.getLaunchIntentForPackage(apps.get(position).label.toString());
                 startActivity(i);
             }
@@ -358,5 +361,44 @@ public class FragmentSearchBar extends Fragment {
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         return pattern.matcher(normalized).replaceAll("");
     }
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        String itemId = getResources().getResourceEntryName(item.getItemId());
+        switch (itemId) {
+            case "menu_item_1":
+                addOnOldApp(selectedPosition);
+                Toast.makeText(getContext(), "Option 1 sélectionnée", Toast.LENGTH_SHORT).show();
+                return true;
+            case "menu_item_2":
+                // Action à effectuer pour l'option 2
+                Toast.makeText(getContext(), "Option 2 sélectionnée", Toast.LENGTH_SHORT).show();
+                return true;
+            // Ajoutez d'autres cas pour les autres éléments de menu si nécessaire
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
+    public void addOnOldApp(int position){
+        if (oldApps.size()>=3){
+            oldApps.remove(0);
+        }
+        boolean isAppInList = false;
+        for (Item item : oldApps) {
+            if (item.name.equals(apps.get(position).name)) {
+                isAppInList = true;
+                break; // Sortir de la boucle dès que l'élément est trouvé
+            }
+        }
+        if (!isAppInList) {
+            oldApps.add(apps.get(position));
+        }
+    }
 
+
+    @Override
+    public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        requireActivity().getMenuInflater().inflate(R.menu.menu_popup, menu);
+
+    }
 }
