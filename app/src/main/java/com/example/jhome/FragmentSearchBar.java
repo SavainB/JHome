@@ -60,7 +60,7 @@ public class FragmentSearchBar extends Fragment {
     private List<String> suggestions;
     private ArrayAdapter<String> adapter;
     private String searchText;
-    private int selectedPosition;
+    private int selectedPosition = -1;
 
     ArrayList<String> contactsList = new ArrayList<>();
     private static final int REQUEST_READ_CONTACTS  = 100;
@@ -127,7 +127,7 @@ public class FragmentSearchBar extends Fragment {
         suggestionsListView.setAdapter(adapter);
         EditText editText = (EditText) rootView.findViewById(R.id.edit);
         Button searchButton = (Button) rootView.findViewById(R.id.searchButton);
-        setHasOptionsMenu(true);
+        //setHasOptionsMenu(true); a quoi ça sert ?
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -367,11 +367,13 @@ public class FragmentSearchBar extends Fragment {
         switch (itemId) {
             case "menu_item_1":
                 addOnOldApp(selectedPosition);
-                Toast.makeText(getContext(), "Option 1 sélectionnée", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Vous avez ajoutez "+oldApps.get(selectedPosition).name, Toast.LENGTH_SHORT).show();
                 return true;
             case "menu_item_2":
                 // Action à effectuer pour l'option 2
-                Toast.makeText(getContext(), "Option 2 sélectionnée", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Vous avez retirez "+oldApps.get(selectedPosition).name, Toast.LENGTH_SHORT).show();
+                oldApps.remove(selectedPosition);
+
                 return true;
             // Ajoutez d'autres cas pour les autres éléments de menu si nécessaire
             default:

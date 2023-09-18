@@ -134,7 +134,8 @@ public class FragmentListApps extends Fragment {
             public void onCreateContextMenu(ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
                 AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) contextMenuInfo;
                 selectedPosition = info.position; // Stockez la position de l'élément sélectionné
-                getActivity().getMenuInflater().inflate(R.menu.menu_popup, contextMenu);
+                getActivity().getMenuInflater().inflate(R.menu.menun_popup_listapps, contextMenu);
+                System.out.println("je suis dedans je fait le truc");
             }
         });
 
@@ -154,9 +155,10 @@ public class FragmentListApps extends Fragment {
     }
     @Override
     public boolean onContextItemSelected(MenuItem item) {
+        System.out.println("je suis dedans 2");
         String itemId = getResources().getResourceEntryName(item.getItemId());
         switch (itemId) {
-            case "menu_item_1":
+            case "menu_item_1_listApps":
                 favoriteapp();
                 boolean isAppInList = false;
                 for (Item iteme : applist) {
@@ -188,7 +190,7 @@ public class FragmentListApps extends Fragment {
 
 
                 return true;
-            case "menu_item_2":
+            case "menu_item_2_listApps":
                 // Action à effectuer pour l'option 2
                 Toast.makeText(getContext(), "Option 2 sélectionnée", Toast.LENGTH_SHORT).show();
                 return true;
@@ -204,7 +206,7 @@ public class FragmentListApps extends Fragment {
     @Override
     public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        requireActivity().getMenuInflater().inflate(R.menu.menu_popup, menu);
+        requireActivity().getMenuInflater().inflate(R.menu.menun_popup_listapps, menu);
 
     }
     public void favoriteapp(){
