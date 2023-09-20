@@ -3,9 +3,16 @@ package com.example.jhome;
 import static androidx.core.content.PermissionChecker.checkSelfPermission;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ShortcutInfo;
+import android.content.pm.ShortcutManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -20,6 +27,7 @@ import androidx.fragment.app.Fragment;
 import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -37,6 +45,7 @@ import android.widget.ListView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
+import java.lang.reflect.Type;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +54,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import android.Manifest;
 import android.widget.Toast;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -55,6 +67,7 @@ public class FragmentSearchBar extends Fragment {
     private PackageManager manager;
     private List<Item> apps,oldApps;
     private ListView list;
+    String tesgt ="";
 
     private ListView suggestionsListView;
     private List<String> suggestions;
@@ -123,6 +136,7 @@ public class FragmentSearchBar extends Fragment {
         suggestionsListView = rootView.findViewById(R.id.suggestionsListView);
         suggestions = new ArrayList<>();
         oldApps = new ArrayList<>();
+
         adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, suggestions);
         suggestionsListView.setAdapter(adapter);
         EditText editText = (EditText) rootView.findViewById(R.id.edit);
@@ -179,7 +193,11 @@ public class FragmentSearchBar extends Fragment {
                 searchText = charSequence.toString();
                 if(!searchText.isEmpty()) {
                     updateSuggestions(searchText);
-                    loadApps(removeAccents(searchText));
+                    try {
+                        loadApps(removeAccents(searchText));
+                    } catch (PackageManager.NameNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
                     list = (ListView) rootView.findViewById(R.id.list_items);
                     list.setVisibility(View.VISIBLE);
                     ArrayAdapter<Item> adapter = new ArrayAdapter<Item>(requireContext(), R.layout.item, apps) {
@@ -316,7 +334,7 @@ public class FragmentSearchBar extends Fragment {
         }
 
     }
-    private void loadApps(String search){
+    private void loadApps(String search) throws PackageManager.NameNotFoundException {
         if (!search.trim().isEmpty())
         {
             manager = requireContext().getPackageManager();
@@ -380,8 +398,10 @@ public class FragmentSearchBar extends Fragment {
                 return super.onContextItemSelected(item);
         }
     }
-    public void addOnOldApp(int position){
-        if (oldApps.size()>=3){
+
+
+    public void addOnOldApp(int position) {
+        if (oldApps.size() >= 3) {
             oldApps.remove(0);
         }
         boolean isAppInList = false;
@@ -395,7 +415,6 @@ public class FragmentSearchBar extends Fragment {
             oldApps.add(apps.get(position));
         }
     }
-
 
     @Override
     public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, @Nullable ContextMenu.ContextMenuInfo menuInfo) {

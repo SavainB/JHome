@@ -155,7 +155,6 @@ public class FragmentListApps extends Fragment {
     }
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        System.out.println("je suis dedans 2");
         String itemId = getResources().getResourceEntryName(item.getItemId());
         switch (itemId) {
             case "menu_item_1_listApps":
